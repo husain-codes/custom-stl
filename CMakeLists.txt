@@ -34,4 +34,5 @@ enable_testing()
 
 add_executable(test_sort tests/test_sort.cpp)
 target_link_libraries(test_sort gtest_main)
+add_test(NAME SortTests COMMAND test_sort)
 add_executable(main src/main.cpp)
