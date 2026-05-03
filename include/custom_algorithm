@@ -1,0 +1,22 @@
+#include <utility>
+#include <functional>
+
+namespace my_algo {
+    // Requires Random Access Iterators
+    template <typename RandomIt, typename Compare = std::less<>>
+    void bubble_sort(RandomIt first, RandomIt last, Compare comp = Compare{}) {
+    if (first == last)
+        return;
+    for (RandomIt end = last; end != first; --end) {
+        bool swapped = false;
+        for (RandomIt it = first; it != end - 1; ++it) {
+            if (comp(*(it + 1), *it)) {
+                std::swap(*(it + 1), *it);
+                swapped = true;
+            }
+        }
+        if (!swapped)
+        break;
+    }
+}
+} // namespace my_algo
