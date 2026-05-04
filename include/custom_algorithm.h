@@ -10,8 +10,8 @@ void bubble_sort(RandomIt first, RandomIt last, Compare comp = Compare{}) {
   for (RandomIt end = last; end != first; --end) {
     bool swapped = false;
     for (RandomIt it = first; it != end - 1; ++it) {
-      if (comp(*(it + 1), *it)) {
-        std::swap(*(it + 1), *it);
+      if (comp(*std::next(it), *it)) {
+        std::swap(*std::next(it), *it);
         swapped = true;
       }
     }
