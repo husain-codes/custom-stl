@@ -37,4 +37,19 @@ void selection_sort(RandomIt first, RandomIt last, Compare comp = Compare{}) {
   }
 }
 
+template <typename BidirectionalIt, typename Compare = std::less<>>
+void insertion_sort(BidirectionalIt first, BidirectionalIt last, Compare comp = Compare{}) {
+  if (first == last || std::next(first) == last)
+    return;
+  for (BidirectionalIt key = std::next(first); key != last; ++key) {
+    auto value = *key;
+    auto j = key;
+    while (j != first && comp(value, *std::prev(j)))
+    {
+      *j = *std::prev(j);
+      --j;
+    }
+    *j = value;
+  }
+}
 } // namespace my_algo

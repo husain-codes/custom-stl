@@ -124,3 +124,65 @@ TEST(SelectionSortTest, ExactOutputMatch) {
 
   EXPECT_EQ(v, expected);
 }
+
+// Verify insertion sort
+TEST(InsertionSortTest, SortsIntegersAscending) {
+  std::vector<int> v = {5, 2, 9, 1, 5, 6};
+  my_algo::insertion_sort(v.begin(), v.end());
+  EXPECT_TRUE(std::is_sorted(v.begin(), v.end()));
+}
+
+TEST(InsertionSortTest, HandlesReverseSorted) {
+  std::vector<int> v = {5, 4, 3, 2, 1};
+
+  my_algo::insertion_sort(v.begin(), v.end());
+
+  EXPECT_TRUE(std::is_sorted(v.begin(), v.end()));
+}
+
+TEST(InsertionSortTest, SortsWithCustomComparator) {
+  std::vector<int> v = {5, 2, 9, 1, 5, 6};
+  auto compare = [](int a, int b) { return a > b; };
+  my_algo::insertion_sort(v.begin(), v.end(), compare);
+  EXPECT_TRUE(std::is_sorted(v.begin(), v.end(), compare));
+}
+
+TEST(InsertionSortTest, EmptyRange) {
+  std::vector<int> v;
+  my_algo::insertion_sort(v.begin(), v.end());
+  EXPECT_TRUE(v.empty());
+}
+
+TEST(InsertionSortTest, SingleElement) {
+  std::vector<int> v = {42};
+  my_algo::insertion_sort(v.begin(), v.end());
+  EXPECT_EQ(v.size(), 1);
+  EXPECT_EQ(v[0], 42);
+}
+
+TEST(InsertionSortTest, WorksWithStrings) {
+  std::vector<std::string> v = {"banana", "apple", "cherry"};
+  my_algo::insertion_sort(v.begin(), v.end());
+  EXPECT_TRUE(std::is_sorted(v.begin(), v.end()));
+}
+
+TEST(InsertionSortTest, HandlesDuplicates) {
+  std::vector<int> v = {3, 1, 2, 3, 1};
+  my_algo::insertion_sort(v.begin(), v.end());
+  EXPECT_TRUE(std::is_sorted(v.begin(), v.end()));
+}
+
+TEST(InsertionSortTest, HandlesFloats) {
+  std::vector<double> v = {3.14, 2.71, 1.41, 1.73};
+  my_algo::insertion_sort(v.begin(), v.end());
+  EXPECT_TRUE(std::is_sorted(v.begin(), v.end()));
+}
+
+TEST(InsertionSortTest, ExactOutputMatch) {
+  std::vector<int> v = {5, 2, 9, 1};
+  std::vector<int> expected = {1, 2, 5, 9};
+
+  my_algo::insertion_sort(v.begin(), v.end());
+
+  EXPECT_EQ(v, expected);
+}
