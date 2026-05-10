@@ -40,4 +40,8 @@ add_executable(test_find tests/test_find.cpp)
 target_link_libraries(test_find gtest_main)
 add_test(NAME FindTests COMMAND test_find)
 
+add_executable(test_reverse tests/test_reverse.cpp)
+target_link_libraries(test_reverse gtest_main)
+add_test(NAME ReverseTests COMMAND test_reverse)
+
 add_executable(main src/main.cpp)

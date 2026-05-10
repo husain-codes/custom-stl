@@ -64,4 +64,15 @@ find(InputIt first, InputIt last,
   }
   return last; // Not found
 }
+
+template <typename BidirectionalIt>
+void reverse(BidirectionalIt first, BidirectionalIt last) {
+  if (first == last)
+    return;
+
+  while (first != last && first != --last) {
+    std::swap(*first, *last);
+    ++first;
+  }
+}
 } // namespace my_algo
