@@ -44,4 +44,8 @@ add_executable(test_reverse tests/test_reverse.cpp)
 target_link_libraries(test_reverse gtest_main)
 add_test(NAME ReverseTests COMMAND test_reverse)
 
+add_executable(test_rotate tests/test_rotate.cpp)
+target_link_libraries(test_rotate gtest_main)
+add_test(NAME RotateTests COMMAND test_rotate)
+
 add_executable(main src/main.cpp)

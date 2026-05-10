@@ -75,4 +75,12 @@ void reverse(BidirectionalIt first, BidirectionalIt last) {
     ++first;
   }
 }
+
+template <typename BidirectionalIt>
+constexpr void rotate(BidirectionalIt first, BidirectionalIt middle, BidirectionalIt last) {
+  if (first == middle || middle == last) return;
+  my_algo::reverse(first,middle);
+  my_algo::reverse(middle,last);
+  my_algo::reverse(first,last);
+}
 } // namespace my_algo
