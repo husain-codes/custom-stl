@@ -48,4 +48,8 @@ add_executable(test_rotate tests/test_rotate.cpp)
 target_link_libraries(test_rotate gtest_main)
 add_test(NAME RotateTests COMMAND test_rotate)
 
+add_executable(test_vector tests/test_vector.cpp)
+target_link_libraries(test_vector gtest_main)
+add_test(NAME VectorTests COMMAND test_vector)
+
 add_executable(main src/main.cpp)
