@@ -103,6 +103,17 @@ public:
     }
   }
 
+  friend void swap(vector& a , vector& b) noexcept {
+    using std::swap;
+    swap(a.size_ , b.size_);
+    swap(a.capacity_ , b.capacity_);
+    swap(a.data_ , b.data_);
+  }
+  vector &operator=(vector obj) {
+    swap(*this , obj);
+    return *this;
+  }
+
   T &operator[](const size_t i) { return data_[i]; }
 
   void push_back(const T &val) {

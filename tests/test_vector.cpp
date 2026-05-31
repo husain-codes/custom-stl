@@ -1,5 +1,6 @@
 #include <custom_algorithm.h>
 #include <gtest/gtest.h>
+#include <string>
 #include <vector>
 
 // Verify Rvalue push_back and move semantics
@@ -111,4 +112,38 @@ TEST(VectorTestConstructor, CopyConstructorObjectLifetimes) {
   // Change v1 to ensure strings are fully duplicated copies
   v1[0] = "changed";
   EXPECT_EQ(v2[0], "hello");
+}
+TEST(VectorTestAssignment, CopyAssignmentDeepCopy) {
+  cv::vector<std::string> source;
+  source.push_back("Hello");
+  source.push_back("World");
+
+  cv::vector<std::string> target;
+  target.push_back("dummy");
+
+  target = source;
+
+  EXPECT_EQ(target.size(), source.size());
+  EXPECT_EQ(target[0], "Hello");
+  EXPECT_EQ(target[1], "World");
+
+  source[1] = "Changed";
+  EXPECT_EQ(target[1], "World");
+}
+
+TEST(VectorTestConstructor, CopyConstructorDeepCopyAfterResize) {
+  cv::vector<std::string> original;
+  for (int i = 0; i < 15; ++i) {
+    original.push_back("item" + std::to_string(i));
+  }
+
+  cv::vector<std::string> copy{original};
+
+  EXPECT_EQ(copy.size(), original.size());
+  for (int i = 0; i < 15; ++i) {
+    EXPECT_EQ(copy[i], original[i]);
+  }
+
+  original[5] = "modified";
+  EXPECT_EQ(copy[5], "item5");
 }
