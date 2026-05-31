@@ -59,3 +59,56 @@ TEST(VectorTestTypes, PushBackDifferentTypes) {
   EXPECT_EQ(v_string[0], "foo");
   EXPECT_EQ(v_string[1], "bar");
 }
+
+// Verify copy constructor
+TEST(VectorTestConstructor, CopyConstructor) {
+  cv::vector<int> v1;
+  for (int i = 0; i < 5; i++)
+    v1.push_back(i);
+
+  // Act
+  cv::vector<int> v2{v1};
+
+  // Assert metadata
+  EXPECT_EQ(v1.size(), v2.size());
+
+  // Assert elements match
+  for (int i = 0; i < 5; i++)
+    EXPECT_EQ(v1[i], v2[i]);
+
+  // Deep copy check (isolation test)
+  for (int i = 0; i < 5; i++) {
+    v1[i] = i * i;
+    EXPECT_EQ(i, v2[i]);
+  }
+}
+
+// Critical Edge Case: Empty Vector
+TEST(VectorTestConstructor, CopyConstructorEmpty) {
+  cv::vector<int> v1;
+
+  // Act
+  cv::vector<int> v2{v1};
+
+  // Assert
+  EXPECT_EQ(v2.size(), 0);
+}
+
+// Object Lifetime Case: Check for memory leaks / object copies
+TEST(VectorTestConstructor, CopyConstructorObjectLifetimes) {
+  // Use std::string to ensure heap-allocated elements copy correctly
+  cv::vector<std::string> v1;
+  v1.push_back("hello");
+  v1.push_back("world");
+
+  // Act
+  cv::vector<std::string> v2{v1};
+
+  // Assert
+  EXPECT_EQ(v2[0], "hello");
+  EXPECT_EQ(v2[1], "world");
+
+  // Change v1 to ensure strings are fully duplicated copies
+  v1[0] = "changed";
+  EXPECT_EQ(v2[0], "hello");
+}

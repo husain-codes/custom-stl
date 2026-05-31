@@ -1,3 +1,4 @@
+#include <cstdio>
 #include <functional>
 #include <utility>
 
@@ -91,45 +92,67 @@ namespace cv {
 
 template <typename T> class vector {
 public:
-  vector() { data_ = new T[capacity_]; }
+  vector() { data_ = static_cast<T *>(::operator new(capacity_ * sizeof(T))); }
+
+  vector(const vector &obj) {
+    size_ = obj.size_;
+    capacity_ = obj.capacity_;
+    data_ = static_cast<T *>(::operator new(capacity_ * sizeof(T)));
+    for (size_t i = 0; i < size_; i++) {
+      new (&data_[i]) T(obj.data_[i]);
+    }
+  }
 
   T &operator[](const size_t i) { return data_[i]; }
 
   void push_back(const T &val) {
-    if (size_ < capacity_ )
-      data_[size_++] = val;
-    else {
-      capacity_ *= 2;
-      T *new_data = new T[capacity_];
-      for (size_t i = 0; i < size_; i++) {
-        new_data[i] = std::move(data_[i]);
-      }
-      delete[] data_;
-      data_ = new_data;
-      data_[size_++] = val;
+    if (size_ >= capacity_) {
+      reallocate_and_insert(capacity_ * 2, val);
+    } else {
+      new (&data_[size_++]) T(val);
     }
   }
 
   void push_back(T &&val) {
-    if (size_ < capacity_)
-      data_[size_++] = std::move(val);
-    else {
-      capacity_ *= 2;
-      T *new_data = new T[capacity_];
-      for (size_t i = 0; i < size_; i++) {
-        new_data[i] = std::move(data_[i]);
-      }
-      delete[] data_;
-      data_ = new_data;
-      data_[size_++] = std::move(val);
+    if (size_ >= capacity_) {
+      reallocate_and_insert(capacity_ * 2, std::move(val));
+    } else {
+      new (&data_[size_++]) T(std::move(val));
     }
   }
 
   size_t size() const { return size_; }
-  ~vector() { delete[] data_; }
+  ~vector() {
+    clear();
+    ::operator delete(data_); // Free raw memory
+  }
+
+  void clear() {
+    for (size_t i = 0; i < size_; i++) {
+      data_[i].~T(); // Call explicit destructor
+    }
+    size_ = 0;
+  }
+
 private:
   size_t size_ = 0;
   size_t capacity_ = 10;
   T *data_ = nullptr;
+  // Helper helper to handle resizing cleanly without duplication
+  template <typename Arg>
+  void reallocate_and_insert(size_t new_capacity, Arg &&new_val) {
+    capacity_ = new_capacity;
+    T *new_data = static_cast<T *>(::operator new(capacity_ * sizeof(T)));
+    // Construct the brand-new incoming element FIRST into the expanded chunk.
+    new (&new_data[size_]) T(std::forward<Arg>(new_val));
+    for (size_t i = 0; i < size_; i++) {
+      new (&new_data[i])
+          T(std::move(data_[i])); // Move-construct into new space
+      data_[i].~T();              // Explicitly destroy old object
+    }
+    ::operator delete(data_); // Free old raw chunk
+    data_ = new_data;
+    size_++;
+  }
 };
 } // namespace cv
