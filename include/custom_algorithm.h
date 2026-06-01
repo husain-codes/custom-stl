@@ -170,6 +170,8 @@ public:
   }
 
   size_t size() const { return size_; }
+  size_t capacity() const { return capacity_; }
+
   ~vector() {
     clear();
     ::operator delete(data_); // Free raw memory

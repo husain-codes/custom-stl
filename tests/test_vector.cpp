@@ -41,6 +41,7 @@ TEST(VectorTestResize, PushBackBeyondInitialCapacity) {
   }
 
   EXPECT_EQ(v.size(), 20);
+  EXPECT_GE(v.capacity(), 20);
 }
 
 // Verify that vector can handle different types
@@ -73,6 +74,7 @@ TEST(VectorTestConstructor, CopyConstructor) {
 
   // Assert metadata
   EXPECT_EQ(v1.size(), v2.size());
+  EXPECT_EQ(v2.capacity(), v1.capacity());
 
   // Assert elements match
   for (int i = 0; i < 5; i++)
@@ -94,6 +96,7 @@ TEST(VectorTestConstructor, CopyConstructorEmpty) {
 
   // Assert
   EXPECT_EQ(v2.size(), 0);
+  EXPECT_EQ(v2.capacity(), v1.capacity());
 }
 
 // Object Lifetime Case: Check for memory leaks / object copies
@@ -125,6 +128,7 @@ TEST(VectorTestAssignment, CopyAssignmentDeepCopy) {
   target = source;
 
   EXPECT_EQ(target.size(), source.size());
+  EXPECT_EQ(target.capacity(), source.capacity());
   EXPECT_EQ(target[0], "Hello");
   EXPECT_EQ(target[1], "World");
 
@@ -141,6 +145,7 @@ TEST(VectorTestConstructor, CopyConstructorDeepCopyAfterResize) {
   cv::vector<std::string> copy{original};
 
   EXPECT_EQ(copy.size(), original.size());
+  EXPECT_EQ(copy.capacity(), original.capacity());
   for (int i = 0; i < 15; ++i) {
     EXPECT_EQ(copy[i], original[i]);
   }
@@ -160,6 +165,7 @@ TEST(VectorTestConstructor, MoveConstructorMoveOnlyTypes) {
 
   // Assert target has stolen ownership
   EXPECT_EQ(moved.size(), 2);
+  EXPECT_EQ(moved.capacity(), 10);
   EXPECT_EQ(*moved[0], 42);
   EXPECT_EQ(*moved[1], 100);
 
@@ -207,6 +213,7 @@ TEST(VectorTestAssignment, MoveAssignmentTransfersDataAndClearsSource) {
 
   // Assert destination successfully stole the contents
   EXPECT_EQ(destination.size(), 2);
+  EXPECT_EQ(destination.capacity(), 10); // Original capacity should remain intact
   EXPECT_EQ(destination[0], "Move");
   EXPECT_EQ(destination[1], "Assignment");
 
@@ -234,4 +241,5 @@ TEST(VectorTestAssignment, MoveAssignmentDoesNotCopyElements) {
       << "Error: Elements were copied during move assignment!";
   EXPECT_EQ(source.size(), 0);
   EXPECT_EQ(destination.size(), 2);
+  EXPECT_EQ(destination.capacity(), 10); // Capacity should remain unchanged
 }
