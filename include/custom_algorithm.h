@@ -103,12 +103,49 @@ public:
     }
   }
 
+  // ==========================================
+  // MOVE CONSTRUCTOR (Rule of 5 - 4/5)
+  // ==========================================
+  // Performs a lightning-fast O(1) resource transfer. 
+  // It initializes this container to a clean empty state first, 
+  // then swaps tracking fields to steal the source object's heap pointers.
+  vector(vector &&obj) noexcept:size_(0) , capacity_(0), data_(nullptr) {
+    swap(*this , obj);
+  }
+
   friend void swap(vector& a , vector& b) noexcept {
     using std::swap;
     swap(a.size_ , b.size_);
     swap(a.capacity_ , b.capacity_);
     swap(a.data_ , b.data_);
   }
+
+  // ==========================================
+  // UNIFIED ASSIGNMENT OPERATOR (Rule of 5 - 5/5)
+  // ==========================================
+  // This single function utilizes the "Pass-by-Value Copy-and-Swap" idiom.
+  // It handles BOTH Copy Assignment and Move Assignment optimally depending
+  // on whether the incoming argument is an Lvalue or an Rvalue:
+  //
+  // 1. CASE A: COPY ASSIGNMENT (v1 = v2;)
+  //    - Because 'obj' is passed by value, the compiler automatically invokes
+  //      your COPY CONSTRUCTOR to create the parameter 'obj' on the stack.
+  //      This creates a completely isolated Deep Copy of the data.
+  //    - 'swap(*this, obj)' replaces our current contents with the new data.
+  //    - When the function exits, 'obj' goes out of scope and its destructor
+  //      automatically destroys our OLD data.
+  //
+  // 2. CASE B: MOVE ASSIGNMENT (v1 = std::move(v2);)
+  //    - Because the argument is cast to an rvalue, the compiler optimizes
+  //      initialization by invoking your MOVE CONSTRUCTOR to build 'obj'.
+  //      This instantly steals 'v2''s pointers in O(1) speed and sets 'v2' to null.
+  //    - 'swap(*this, obj)' passes our old data over to 'obj' and takes the stolen data.
+  //    - Upon function exit, 'obj' dies and frees our old data seamlessly.
+  //
+  // EXCEPTION SAFETY: If any allocation fails while constructing the value 
+  // parameter 'obj', it happens BEFORE entering this function. Your current 
+  // vector's state is never corrupted, providing Strong Exception Safety.
+  // ==========================================
   vector &operator=(vector obj) {
     swap(*this , obj);
     return *this;
