@@ -280,3 +280,53 @@ TEST(VectorTestAccess, ConstBracketOperator) {
   // Pass it into our const reference helper to validate the const routes
   VerifyConstAccess(v);
 }
+
+// 1. Core Test: Verify basic size tracking decrements
+TEST(VectorTestModifiers, PopBackDecrementsSize) {
+  cv::vector<int> v;
+  v.push_back(10);
+  v.push_back(20);
+  v.push_back(30);
+
+  EXPECT_EQ(v.size(), 3u);
+
+  // Pop the trailing item (30)
+  v.pop_back();
+
+  EXPECT_EQ(v.size(), 2u);
+  EXPECT_EQ(v[0], 10);
+  EXPECT_EQ(v[1], 20);
+}
+
+// 2. Edge Case: Verify popping an empty vector does not crash
+TEST(VectorTestModifiers, PopBackOnEmptyVectorIsSafe) {
+  cv::vector<int> v;
+
+  // Calling pop_back on a vector with size 0 should do nothing safely
+  EXPECT_NO_THROW(v.pop_back());
+  EXPECT_EQ(v.size(), 0u);
+}
+
+// 3. Lifetime Test: Verify object destructors are explicitly triggered
+struct DestructorCounter {
+  static int destroy_count;
+  DestructorCounter() = default;
+  ~DestructorCounter() { destroy_count++; }
+};
+int DestructorCounter::destroy_count = 0;
+
+TEST(VectorTestModifiers, PopBackTriggersElementDestructor) {
+  cv::vector<DestructorCounter> v;
+  v.push_back(DestructorCounter());
+  v.push_back(DestructorCounter());
+
+  // Reset tracking counter after push_back copies/moves are finished
+  DestructorCounter::destroy_count = 0;
+
+  // Act
+  v.pop_back();
+
+  // Assert: Exactly one element should have been explicitly destroyed
+  EXPECT_EQ(DestructorCounter::destroy_count, 1);
+  EXPECT_EQ(v.size(), 1u);
+}
