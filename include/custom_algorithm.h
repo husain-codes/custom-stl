@@ -152,7 +152,7 @@ public:
   }
 
   T &operator[](const size_t i) { return data_[i]; }
-
+  const T &operator[](const size_t i) const {return data_[i];}
   void push_back(const T &val) {
     if (size_ >= capacity_) {
       reallocate_and_insert(capacity_ * 2, val);
@@ -171,6 +171,7 @@ public:
 
   size_t size() const { return size_; }
   size_t capacity() const { return capacity_; }
+  bool empty() const { return size_ == 0; }
 
   ~vector() {
     clear();

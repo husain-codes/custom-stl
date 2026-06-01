@@ -213,7 +213,8 @@ TEST(VectorTestAssignment, MoveAssignmentTransfersDataAndClearsSource) {
 
   // Assert destination successfully stole the contents
   EXPECT_EQ(destination.size(), 2);
-  EXPECT_EQ(destination.capacity(), 10); // Original capacity should remain intact
+  EXPECT_EQ(destination.capacity(),
+            10); // Original capacity should remain intact
   EXPECT_EQ(destination[0], "Move");
   EXPECT_EQ(destination[1], "Assignment");
 
@@ -242,4 +243,40 @@ TEST(VectorTestAssignment, MoveAssignmentDoesNotCopyElements) {
   EXPECT_EQ(source.size(), 0);
   EXPECT_EQ(destination.size(), 2);
   EXPECT_EQ(destination.capacity(), 10); // Capacity should remain unchanged
+}
+
+// Helper function to simulate passing your vector by const reference
+void VerifyConstAccess(const cv::vector<std::string> &const_v) {
+  // 1. Verify const method empty() compiles and works here
+  EXPECT_FALSE(const_v.empty());
+
+  // 2. Verify const operator[] compiles and allows reading
+  EXPECT_EQ(const_v[0], "Const");
+  EXPECT_EQ(const_v[1], "Safe");
+
+  // Note: Writing const_v[0] = "Change"; here would trigger a compilation
+  // error, which is exactly the read-only security safety net we want!
+}
+
+// Test empty() states
+TEST(VectorTestCapacity, EmptyMethodBehavior) {
+  cv::vector<int> v;
+
+  // A freshly created vector must be empty
+  EXPECT_TRUE(v.empty());
+
+  v.push_back(42);
+
+  // After adding an element, it must not be empty
+  EXPECT_FALSE(v.empty());
+}
+
+// 2. Test const bracket operator routing
+TEST(VectorTestAccess, ConstBracketOperator) {
+  cv::vector<std::string> v;
+  v.push_back("Const");
+  v.push_back("Safe");
+
+  // Pass it into our const reference helper to validate the const routes
+  VerifyConstAccess(v);
 }
