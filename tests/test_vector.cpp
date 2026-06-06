@@ -389,3 +389,68 @@ TEST(VectorTestCapacity,
   // Assert the 11th element is a perfect duplicate copy of the 1st element
   EXPECT_EQ(v[10], "item_0");
 }
+
+// Test the Growth Branch (Constructing new elements)
+TEST(VectorTestCapacity, ResizeGrowsAndDefaultConstructs) {
+  cv::vector<int> v;
+  v.push_back(10);
+  v.push_back(20);
+
+  // Act - Resize to a larger dimensions (uses default int value of 0)
+  v.resize(5);
+
+  // Assert size updated correctly
+  EXPECT_EQ(v.size(), 5u);
+  EXPECT_GE(v.capacity(), 10u);
+
+  // Assert original elements are untouched and new ones are default-initialized
+  EXPECT_EQ(v[0], 10);
+  EXPECT_EQ(v[1], 20);
+  EXPECT_EQ(v[2], 0);
+  EXPECT_EQ(v[3], 0);
+  EXPECT_EQ(v[4], 0);
+}
+
+// Test the Growth Branch with a Custom Padding Value
+TEST(VectorTestCapacity, ResizeGrowsWithCustomValue) {
+  cv::vector<std::string> v;
+  v.push_back("A");
+
+  // Act - Resize up using "B" as the pad value
+  v.resize(3, "B");
+
+  // Assert
+  EXPECT_EQ(v.size(), 3u);
+  EXPECT_EQ(v[0], "A");
+  EXPECT_EQ(v[1], "B");
+  EXPECT_EQ(v[2], "B");
+}
+
+// Test the Shrink Branch (Ensuring elements are destroyed but capacity remains)
+struct ResizeDestructorCounter {
+  static int destroy_count;
+  ResizeDestructorCounter() = default;
+  ~ResizeDestructorCounter() { destroy_count++; }
+};
+int ResizeDestructorCounter::destroy_count = 0;
+
+TEST(VectorTestCapacity, ResizeShrinksAndDestroysElements) {
+  cv::vector<ResizeDestructorCounter> v;
+  v.push_back(ResizeDestructorCounter());
+  v.push_back(ResizeDestructorCounter());
+  v.push_back(ResizeDestructorCounter());
+  EXPECT_EQ(v.size(), 3u);
+  size_t original_capacity = v.capacity();
+  ResizeDestructorCounter pad_val;            // Keep alive on local frame
+  ResizeDestructorCounter::destroy_count = 0; // Reset tracking flag
+
+  // Act - Shrink size from 3 down to 1
+  v.resize(1, pad_val);
+
+  // Assert size shrank but capacity did not drop
+  EXPECT_EQ(v.size(), 1u);
+  EXPECT_EQ(v.capacity(), original_capacity);
+
+  // Assert exactly 2 elements were explicitly destroyed
+  EXPECT_EQ(ResizeDestructorCounter::destroy_count, 2);
+}

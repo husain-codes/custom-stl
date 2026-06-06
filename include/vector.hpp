@@ -1,7 +1,6 @@
 #include <cstdio>
 #include <functional>
 #include <utility>
-
 namespace cv {
 
 template <typename T> class vector {
@@ -93,9 +92,34 @@ public:
     if (!empty())
       data_[--size_].~T();
   }
+
   void reserve(const size_t val) {
     if (val > capacity_) {
       reallocate(val);
+    }
+  }
+
+  void resize(const size_t size, const T &val = T()) {
+    if (size < size_) {
+      // Shrink size.
+      for (size_t i = size; i < size_; i++) {
+        data_[i].~T();
+      }
+      size_ = size;
+
+    } else if (size > size_) {
+      if (size > capacity_) {
+        reallocate(std::max(size, 2 * capacity_));
+        for (size_t i = size_; i < size; i++) {
+          new (&data_[i]) T(val);
+        }
+        size_ = size;
+      } else {
+        for (size_t i = size_; i < size; i++) {
+          new (&data_[i]) T(val);
+        }
+        size_ = size;
+      }
     }
   }
 
