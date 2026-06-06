@@ -1,7 +1,7 @@
-#include <vector.hpp>
 #include <gtest/gtest.h>
 #include <memory> // Required for std::unique_ptr
 #include <string>
+#include <vector.hpp>
 #include <vector>
 
 // Verify Rvalue push_back and move semantics
@@ -329,4 +329,63 @@ TEST(VectorTestModifiers, PopBackTriggersElementDestructor) {
   // Assert: Exactly one element should have been explicitly destroyed
   EXPECT_EQ(DestructorCounter::destroy_count, 1);
   EXPECT_EQ(v.size(), 1u);
+}
+
+// Core Test: Verify capacity expands but size and data remain identical
+TEST(VectorTestCapacity, ReserveExpandsCapacityLeavesSizeUntouched) {
+  cv::vector<int> v;
+  v.push_back(10);
+  v.push_back(20);
+
+  size_t original_size = v.size();
+
+  // Act - Manually bump capacity to 50
+  v.reserve(50);
+
+  // Assert capacity updated but size stayed exactly the same
+  EXPECT_EQ(v.capacity(), 50u);
+  EXPECT_EQ(v.size(), original_size);
+
+  // Assert actual element values safely survived the migration
+  EXPECT_EQ(v[0], 10);
+  EXPECT_EQ(v[1], 20);
+}
+
+// Boundary Test: Verify requesting smaller capacity does nothing
+TEST(VectorTestCapacity, ReserveSmallerCapacityIsIgnored) {
+  cv::vector<int> v;
+  v.push_back(10); // Initial capacity is 10
+
+  size_t original_capacity = v.capacity();
+
+  // Act - Request a shrink down to 5
+  v.reserve(5);
+
+  // Assert capacity did not change or shrink
+  EXPECT_EQ(v.capacity(), original_capacity);
+}
+
+// Regression Test: Verify self-insertion works perfectly during reallocation
+TEST(VectorTestCapacity,
+     PushBackSelfReferentialElementTriggersSafeReallocation) {
+  cv::vector<std::string> v;
+
+  // Fill the vector completely up to its initial default capacity of 10
+  for (int i = 0; i < 10; ++i) {
+    v.push_back("item_" + std::to_string(i));
+  }
+
+  // Sanity check: Vector must be perfectly full
+  ASSERT_EQ(v.size(), v.capacity());
+
+  // Act - Push the first element (index 0) into itself.
+  // This triggers a full capacity reallocation while passing a reference to its
+  // own block!
+  v.push_back(v[0]);
+
+  // Assert size incremented to 11
+  EXPECT_EQ(v.size(), 11u);
+
+  // Assert the 11th element is a perfect duplicate copy of the 1st element
+  EXPECT_EQ(v[10], "item_0");
 }
