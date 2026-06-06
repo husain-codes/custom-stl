@@ -454,3 +454,35 @@ TEST(VectorTestCapacity, ResizeShrinksAndDestroysElements) {
   // Assert exactly 2 elements were explicitly destroyed
   EXPECT_EQ(ResizeDestructorCounter::destroy_count, 2);
 }
+
+// Helper function to force a const reference environment
+void VerifyConstAccessors(const cv::vector<int> &const_v) {
+  // Verify read-only const front() and back() compile and match
+  EXPECT_EQ(const_v.front(), 10);
+  EXPECT_EQ(const_v.back(), 30);
+}
+
+TEST(VectorTestAccess, FrontAndBackAccessors) {
+  cv::vector<int> v;
+  v.push_back(10);
+  v.push_back(20);
+  v.push_back(30);
+
+  // 1. Test basic element lookup
+  EXPECT_EQ(v.front(), 10);
+  EXPECT_EQ(v.back(), 30);
+
+  // 2. Test mutable editing capabilities via references
+  v.front() = 99;
+  v.back() = 88;
+
+  EXPECT_EQ(v[0], 99);
+  EXPECT_EQ(v[2], 88);
+
+  // 3. Test const access routing safety
+  cv::vector<int> const_tester;
+  const_tester.push_back(10);
+  const_tester.push_back(20);
+  const_tester.push_back(30);
+  VerifyConstAccessors(const_tester);
+}

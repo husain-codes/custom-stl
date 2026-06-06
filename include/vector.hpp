@@ -123,6 +123,12 @@ public:
     }
   }
 
+  T &front() { return data_[0]; }
+  const T &front() const { return data_[0]; }
+
+  T &back() { return data_[size_ - 1]; }
+  const T &back() const { return data_[size_ - 1]; }
+
   ~vector() {
     clear();
     ::operator delete(data_); // Free raw memory
