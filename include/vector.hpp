@@ -5,6 +5,9 @@ namespace cv {
 
 template <typename T> class vector {
 public:
+  using iterator = T *;
+  using const_iterator = const T *;
+
   vector() { data_ = static_cast<T *>(::operator new(capacity_ * sizeof(T))); }
 
   vector(const vector &obj) {
@@ -141,6 +144,30 @@ public:
       throw std::out_of_range("Index out of range");
     }
     return data_[i];
+  }
+
+  iterator begin() {
+    return data_;
+  }
+
+  const_iterator begin() const {
+    return data_;
+  }
+
+  iterator end() {
+    return data_ + size_;
+  }
+
+  const_iterator end() const {
+    return data_ + size_;
+  }
+
+  const_iterator cbegin() const {
+    return data_;
+  }
+
+  const_iterator cend() const {
+    return data_ + size_;
   }
 
   ~vector() {

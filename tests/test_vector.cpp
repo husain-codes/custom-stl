@@ -533,3 +533,66 @@ TEST(VectorTestAccess, AtMethodThrowsOutOfBounds) {
     // Index far beyond size should throw
     EXPECT_THROW(v.at(100), std::out_of_range);
 }
+
+// Verify that standard mutable loops function correctly over the vector
+TEST(VectorTestIterator, RangeBasedForLoop) {
+    cv::vector<int> v;
+    v.push_back(10);
+    v.push_back(20);
+    v.push_back(30);
+
+    int sum = 0;
+    for (int val : v) {
+        sum += val;
+    }
+    EXPECT_EQ(sum, 60);
+}
+
+// Verify that modifying data through a non-const iterator updates the vector
+TEST(VectorTestIterator, ModifyElementsViaIterator) {
+    cv::vector<int> v;
+    v.push_back(1);
+    v.push_back(2);
+
+    // Grab mutable iterator
+    cv::vector<int>::iterator it = v.begin();
+    *it = 10;          // Modify first element
+    *(it + 1) = 20;    // Modify second element using pointer math
+
+    EXPECT_EQ(v[0], 10);
+    EXPECT_EQ(v[1], 20);
+    EXPECT_EQ(v.begin() + v.size(), v.end()); // Boundary check
+}
+
+// Helper to force execution through const T* iterators
+void VerifyReadonlyIteration(const cv::vector<int>& const_v) {
+    int expected_value = 5;
+    for (cv::vector<int>::const_iterator it = const_v.begin(); it != const_v.end(); ++it) {
+        EXPECT_EQ(*it, expected_value);
+        expected_value += 5;
+    }
+}
+
+// Test both implicit const routing and explicit cbegin/cend capabilities
+TEST(VectorTestIterator, ConstAndExplicitCbegin) {
+    cv::vector<int> v;
+    v.push_back(5);
+    v.push_back(10);
+
+    // 1. Verify implicit routing when container is under const reference
+    VerifyReadonlyIteration(v);
+
+    // 2. Verify explicit read-only access on a mutable container via cbegin
+    cv::vector<int>::const_iterator cit = v.cbegin();
+    EXPECT_EQ(*cit, 5);
+    EXPECT_EQ(*(cit + 1), 10);
+    EXPECT_EQ(cit + v.size(), v.cend());
+}
+
+// Verify that an empty vector results in begin() matching end() immediately
+TEST(VectorTestIterator, EmptyVectorBoundaries) {
+    cv::vector<double> v; // Empty state
+
+    EXPECT_EQ(v.begin(), v.end());
+    EXPECT_EQ(v.cbegin(), v.cend());
+}
