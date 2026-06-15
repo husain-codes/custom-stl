@@ -129,6 +129,20 @@ public:
   T &back() { return data_[size_ - 1]; }
   const T &back() const { return data_[size_ - 1]; }
 
+  T &at(const size_t i) {
+    if (i >= size_) {
+      throw std::out_of_range("Index out of range");
+    }
+    return data_[i];
+  }
+
+  const T &at(const size_t i) const {
+    if (i >= size_) {
+      throw std::out_of_range("Index out of range");
+    }
+    return data_[i];
+  }
+
   ~vector() {
     clear();
     ::operator delete(data_); // Free raw memory

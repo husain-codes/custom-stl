@@ -486,3 +486,50 @@ TEST(VectorTestAccess, FrontAndBackAccessors) {
   const_tester.push_back(30);
   VerifyConstAccessors(const_tester);
 }
+
+// Core Test: Verify basic element lookup and mutable editing via at()
+TEST(VectorTestAccess, AtMethodMutableAccess) {
+    cv::vector<int> v;
+    v.push_back(10);
+    v.push_back(20);
+    v.push_back(30);
+
+    // Verify reading values
+    EXPECT_EQ(v.at(0), 10);
+    EXPECT_EQ(v.at(1), 20);
+    EXPECT_EQ(v.at(2), 30);
+
+    // Verify writing values through the returned reference
+    v.at(1) = 99;
+    EXPECT_EQ(v[1], 99);
+}
+
+// Helper function to force a const reference environment for at()
+void VerifyConstAtAccess(const cv::vector<std::string> &const_v) {
+    // Verify read-only const at() compiles and matches
+    EXPECT_EQ(const_v.at(0), "Const");
+    EXPECT_EQ(const_v.at(1), "Safe");
+}
+
+// Test const at() operator routing
+TEST(VectorTestAccess, ConstAtOperator) {
+    cv::vector<std::string> v;
+    v.push_back("Const");
+    v.push_back("Safe");
+
+    // Pass it into our const reference helper to validate the const routes
+    VerifyConstAtAccess(v);
+}
+
+// Boundary Test: Verify that out-of-range indices throw std::out_of_range
+TEST(VectorTestAccess, AtMethodThrowsOutOfBounds) {
+    cv::vector<int> v;
+    v.push_back(10);
+    v.push_back(20);
+
+    // Index equal to size should throw
+    EXPECT_THROW(v.at(2), std::out_of_range);
+
+    // Index far beyond size should throw
+    EXPECT_THROW(v.at(100), std::out_of_range);
+}
