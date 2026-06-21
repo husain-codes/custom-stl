@@ -596,3 +596,94 @@ TEST(VectorTestIterator, EmptyVectorBoundaries) {
     EXPECT_EQ(v.begin(), v.end());
     EXPECT_EQ(v.cbegin(), v.cend());
 }
+
+// A helper class to track exact constructor counters
+struct EmplaceTracker {
+    static int construct_count;
+    static int copy_count;
+    static int move_count;
+
+    std::string name;
+    int value;
+
+    // Reset helper to clean state before each test scenario
+    static void reset() {
+        construct_count = 0;
+        copy_count = 0;
+        move_count = 0;
+    }
+
+    // Standard constructor
+    EmplaceTracker(std::string n, int v) : name(std::move(n)), value(v) {
+        construct_count++;
+    }
+
+    // Copy constructor
+    EmplaceTracker(const EmplaceTracker& other) : name(other.name), value(other.value) {
+        copy_count++;
+    }
+
+    // Move constructor
+    EmplaceTracker(EmplaceTracker&& other) noexcept : name(std::move(other.name)), value(other.value) {
+        move_count++;
+    }
+};
+
+// Initialize static counters
+int EmplaceTracker::construct_count = 0;
+int EmplaceTracker::copy_count = 0;
+int EmplaceTracker::move_count = 0;
+
+// --- GOOGLETEST CASES ---
+
+// 1. Verify that passing raw arguments executes zero copies and zero moves
+TEST(VectorTestEmplace, AbsoluteInPlaceConstruction) {
+    EmplaceTracker::reset();
+    cv::vector<EmplaceTracker> v;
+    v.reserve(4);
+
+    // Build the object directly in place
+    v.emplace_back("DirectObject", 42);
+
+    EXPECT_EQ(v.size(), 1);
+    EXPECT_EQ(v[0].name, "DirectObject");
+    EXPECT_EQ(EmplaceTracker::construct_count, 1);
+    EXPECT_EQ(EmplaceTracker::copy_count, 0);
+    EXPECT_EQ(EmplaceTracker::move_count, 0); // Crucial! Must be zero if emplace works
+}
+
+// 2. Verify that perfect forwarding preserves lvalues (copies) and rvalues (moves)
+TEST(VectorTestEmplace, PerfectForwardingSemantics) {
+    EmplaceTracker::reset();
+    cv::vector<EmplaceTracker> v;
+    v.reserve(4);
+
+    EmplaceTracker local_item("LvalueSource", 100);
+
+    // Scenario A: Passing an lvalue should invoke a copy
+    v.emplace_back(local_item);
+    EXPECT_EQ(EmplaceTracker::copy_count, 1);
+
+    // Scenario B: Passing an rvalue should invoke a move
+    v.emplace_back(std::move(local_item));
+    EXPECT_EQ(EmplaceTracker::move_count, 1);
+}
+
+// 3. The Reallocation & Reference Self-Corruption Test
+TEST(VectorTestEmplace, SelfReferenceDuringReallocation) {
+    cv::vector<EmplaceTracker> v;
+
+    // Set up vector to be completely full at capacity 2
+    v.emplace_back("First", 10);
+    v.emplace_back("Second", 20);
+    ASSERT_EQ(v.size(), 2);
+    ASSERT_EQ(v.capacity(), 10);
+
+    // This forces reallocation. We pass a string reference belonging to v[0]
+    // down into the parameter pack. It must survive the array destruction.
+    v.emplace_back(v[0].name, 999);
+
+    EXPECT_EQ(v.size(), 3);
+    EXPECT_EQ(v.back().name, "First"); // If corrupted, this will match garbage or fail
+    EXPECT_EQ(v.back().value, 999);
+}

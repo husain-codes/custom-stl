@@ -88,6 +88,16 @@ public:
     }
   }
 
+  template <typename... Args> T &emplace_back(Args &&...args) {
+    if (size_ >= capacity_) {
+      size_t new_capacity = (capacity_ == 0) ? 1 : 2 * capacity_;
+      reallocate_and_emplace(new_capacity, std::forward<Args>(args)...);
+    } else {
+      new (&data_[size_++]) T(std::forward<Args>(args)...);
+    }
+    return data_[size_ - 1];
+  }
+
   size_t size() const { return size_; }
   size_t capacity() const { return capacity_; }
   bool empty() const { return size_ == 0; }
@@ -146,29 +156,17 @@ public:
     return data_[i];
   }
 
-  iterator begin() {
-    return data_;
-  }
+  iterator begin() { return data_; }
 
-  const_iterator begin() const {
-    return data_;
-  }
+  const_iterator begin() const { return data_; }
 
-  iterator end() {
-    return data_ + size_;
-  }
+  iterator end() { return data_ + size_; }
 
-  const_iterator end() const {
-    return data_ + size_;
-  }
+  const_iterator end() const { return data_ + size_; }
 
-  const_iterator cbegin() const {
-    return data_;
-  }
+  const_iterator cbegin() const { return data_; }
 
-  const_iterator cend() const {
-    return data_ + size_;
-  }
+  const_iterator cend() const { return data_ + size_; }
 
   ~vector() {
     clear();
@@ -210,6 +208,28 @@ private:
     ::operator delete(data_);
     data_ = new_data;
     capacity_ = new_capacity;
+  }
+
+  // Helper to handle reallocation for emplace back
+  template <typename... Args>
+  void reallocate_and_emplace(size_t new_capacity, Args &&...args) {
+    // 1. Allocate the raw space
+    T *new_data = static_cast<T *>(::operator new(new_capacity * sizeof(T)));
+
+    // 2. Construct the brand-new item directly in the new block first!
+    // This safely reads from `args` while the old memory block is still 100%
+    // alive.
+    ::new (&new_data[size_]) T(std::forward<Args>(args)...);
+
+    // 3. Move your existing elements over to the new block
+    for (size_t i = 0; i < size_; i++) {
+      new (&new_data[i]) T(std::move(data_[i]));
+      data_[i].~T();
+    }
+    ::operator delete(data_);
+    data_ = new_data;
+    capacity_ = new_capacity;
+    size_++;
   }
 };
 } // namespace cv
